@@ -3,10 +3,16 @@ from src.post.schemas import PostCreate
 from fastapi import Depends
 from src.database import get_async_session
 from src.post.models import Post
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-def get_post_by_id(post_id: int, db: Session = Depends(get_async_session)) -> Post:
-    return db.query(Post).filter(Post.id == post_id).first()
-
+async def get_post_by_id(post_id: int, db: AsyncSession) -> dict:
+    # Создаем селекторный запрос по идентификатору поста
+    stmt = select(Post).where(Post.id == post_id)
+    # Исполняем запрос и получаем результат
+    result = await db.execute(stmt)
+    post_data = result.scalar_one_or_none()
+    return post_data.__dict__ if post_data else None
 
 async def create_post(post: PostCreate, user_id: int, db: Session = Depends(get_async_session)) -> Post:
     

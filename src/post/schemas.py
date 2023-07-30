@@ -16,7 +16,9 @@ class PostUpdate(PostBase):
     pass
 
 class Post(PostBase):
-    id: int
-
+    title: str
+    content: str
+    user_id: int
+    
     class Config:
         from_attributes = True

@@ -24,12 +24,12 @@ async def create_post(post: schemas.PostCreate, current_user: User = Depends(cur
 #     return await service.create_post(db, post, current_user)
 
 
-# @router.get("/posts/{post_id}", response_model=schemas.Post)
-# def read_post(post_id: int, db: Session = Depends(get_async_session)):
-#     post = service.get_post_by_id(db, post_id)
-#     if not post:
-#         raise HTTPException(status_code=404, detail="Post not found")
-#     return post
+@router.get("/posts/{post_id}", response_model=schemas.Post)
+async def read_post(post_id: int, db: Session = Depends(get_async_session)):
+    post_data = await service.get_post_by_id(post_id, db)
+    if not post_data:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return schemas.Post(**post_data)
 
 # @router.put("/posts/{post_id}", response_model=schemas.Post)
 # def update_post(
