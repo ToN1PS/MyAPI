@@ -13,15 +13,11 @@ router = APIRouter(
     tags=["Post"]
 )
 
-# Не работает нихуя сука бля
+
 @router.post("/posts/", response_model=schemas.PostBase)
 async def create_post(post: schemas.PostCreate, current_user: User = Depends(current_user), db: Session = Depends(get_async_session)):
     
     return await service.create_post(post, current_user.id, db)
-
-# @router.post("/posts/", response_model=schemas.PostBase)
-# async def create_post(post: schemas.PostCreate, current_user: User = Depends(get_current_user_id), db: Session = Depends(get_async_session)):
-#     return await service.create_post(db, post, current_user)
 
 
 @router.get("/posts/{post_id}", response_model=schemas.Post)
@@ -46,14 +42,24 @@ async def update_post(post_id: int, post_update_data: schemas.PostUpdate, db: Se
     return await service.get_post_by_id(post_id, db)
 
 
-# @router.delete("/posts/{post_id}", response_model=schemas.PostUpdate)
-# def delete_post(
-#     post_id: int,
-#     post_owner: Post = Depends(is_post_owner),
-#     db: Session = Depends(get_async_session)
-# ):
-#     service.delete_post(db, post_id)
-#     return post_owner  # Return the deleted post owner or a suitable response model
+@router.delete("/posts/{post_id}", response_model=schemas.Post)
+async def delete_post(
+    post_id: int,
+    current_user: User = Depends(current_user),
+    db: Session = Depends(get_async_session),
+):
+    post = await service.get_post_by_id(post_id, db)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Проверяем, что текущий пользователь является владельцем поста
+    if current_user.id != post.user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    await service.delete_post_by_id(post_id, db)
+    
+    # Возвращаем удаленный пост
+    return post
 
 
 

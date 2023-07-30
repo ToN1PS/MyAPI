@@ -6,15 +6,15 @@ from src.post.models import Post
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
-from sqlalchemy import update
+from sqlalchemy import update, delete
 
-async def get_post_by_id(post_id: int, db: AsyncSession) -> dict:
+async def get_post_by_id(post_id: int, db: AsyncSession) -> Post:
     # Создаем селекторный запрос по идентификатору поста
     stmt = select(Post).where(Post.id == post_id)
     # Исполняем запрос и получаем результат
     result = await db.execute(stmt)
-    post_data = result.scalar_one_or_none()
-    return post_data.__dict__ if post_data else None
+    post = result.scalar_one_or_none()
+    return post
 
 async def create_post(post: PostCreate, user_id: int, db: Session = Depends(get_async_session)) -> Post:
     
@@ -38,6 +38,14 @@ async def create_post(post: PostCreate, user_id: int, db: Session = Depends(get_
 async def update_post_by_id(post_id: int, post_update_data: dict, db: AsyncSession):
     # Создаем обновляющий запрос по идентификатору поста
     stmt = update(Post).where(Post.id == post_id).values(post_update_data)
+    # Исполняем запрос
+    await db.execute(stmt)
+    # Коммитим изменения
+    await db.commit()
+    
+async def delete_post_by_id(post_id: int, db: AsyncSession):
+    # Создаем запрос на удаление поста по его идентификатору
+    stmt = delete(Post).where(Post.id == post_id)
     # Исполняем запрос
     await db.execute(stmt)
     # Коммитим изменения
