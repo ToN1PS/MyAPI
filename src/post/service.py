@@ -5,6 +5,8 @@ from src.database import get_async_session
 from src.post.models import Post
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from fastapi import HTTPException
+from sqlalchemy import update
 
 async def get_post_by_id(post_id: int, db: AsyncSession) -> dict:
     # Создаем селекторный запрос по идентификатору поста
@@ -33,4 +35,10 @@ async def create_post(post: PostCreate, user_id: int, db: Session = Depends(get_
     # Возвращаем созданный пост
     return new_post
     
- 
+async def update_post_by_id(post_id: int, post_update_data: dict, db: AsyncSession):
+    # Создаем обновляющий запрос по идентификатору поста
+    stmt = update(Post).where(Post.id == post_id).values(post_update_data)
+    # Исполняем запрос
+    await db.execute(stmt)
+    # Коммитим изменения
+    await db.commit()

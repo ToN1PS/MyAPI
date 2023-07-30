@@ -31,22 +31,19 @@ async def read_post(post_id: int, db: Session = Depends(get_async_session)):
         raise HTTPException(status_code=404, detail="Post not found")
     return schemas.Post(**post_data)
 
-# @router.put("/posts/{post_id}", response_model=schemas.Post)
-# def update_post(
-#     post_id: int,
-#     post: schemas.PostUpdate,
-#     current_user: User = Depends(get_current_user_id),
-#     db: Session = Depends(get_async_session)
-# ):
-#     post_owner = service.get_post_by_id(db, post_id)
-#     if not post_owner:
-#         raise HTTPException(status_code=404, detail="Post not found")
-
-#     if post_owner.author_id != current_user.id:
-#         raise HTTPException(status_code=403, detail="You are not the owner of this post")
-
-#     updated_post = service.update_post(db, post_owner, post)
-#     return updated_post
+@router.put("/posts/{post_id}", response_model=schemas.Post)
+async def update_post(post_id: int, post_update_data: schemas.PostUpdate, db: Session = Depends(get_async_session)):
+    post = await service.get_post_by_id(post_id, db)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Преобразуем модель `PostUpdate` в словарь, чтобы передать его в функцию обновления
+    post_update_dict = post_update_data.model_dump(exclude_unset=True)
+    
+    await service.update_post_by_id(post_id, post_update_dict, db)
+    
+    # Возвращаем обновленный пост
+    return await service.get_post_by_id(post_id, db)
 
 
 # @router.delete("/posts/{post_id}", response_model=schemas.PostUpdate)
