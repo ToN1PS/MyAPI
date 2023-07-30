@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from src.database import Base
 
-
 class User(Base):
     __tablename__ = "users"
 
@@ -22,7 +21,5 @@ class Post(Base):
     title = Column(String, index=True, nullable=False)
     content = Column(String, nullable=False)
     
-    
-
     def __repr__(self):
         return f"<Post(title={self.title}, user_id={self.user_id})>"

@@ -5,6 +5,7 @@ class PostBase(BaseModel):
     content: str
     user_id: int
 
+
 class PostCreate(PostBase):
     title: str
     content: str

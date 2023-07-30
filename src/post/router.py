@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from src.auth.utils import get_user_db
 
 from src.database import get_async_session
 from src.models import User
 from src.post import service, schemas
-from src.auth.dependencies import oauth2_scheme
+from src.auth.config import current_user
 
-from src.post.dependencies import get_current_user_id
 
 router = APIRouter(
     prefix="/jwt",
@@ -15,8 +15,9 @@ router = APIRouter(
 
 # Не работает нихуя сука бля
 @router.post("/posts/", response_model=schemas.PostBase)
-async def create_post(post: schemas.PostCreate, current_user: User = Depends(get_current_user_id), db: Session = Depends(get_async_session)):
-    return await service.create_post(post, current_user, db)
+async def create_post(post: schemas.PostCreate, current_user: User = Depends(current_user), db: Session = Depends(get_async_session)):
+    
+    return await service.create_post(post, current_user.id, db)
 
 # @router.post("/posts/", response_model=schemas.PostBase)
 # async def create_post(post: schemas.PostCreate, current_user: User = Depends(get_current_user_id), db: Session = Depends(get_async_session)):
