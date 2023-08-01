@@ -4,7 +4,7 @@ from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
-from sqlalchemy.orm import sessionmaker, Mapped, declared_attr, mapped_column
+from sqlalchemy.orm import sessionmaker, Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy import String, Boolean, Integer, Column, TIMESTAMP, ForeignKey
 import datetime 
 
@@ -30,11 +30,30 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
 class Post(Base):
     __tablename__ = "posts"
-    
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True, nullable=False)
-    content = Column(String, nullable=False)
-    user_id = Column(Integer,  nullable=False) # ForeignKey(user.c.id),
+    title = Column(String, index=True)
+    content = Column(String)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="posts")
+    likes = relationship("Like", back_populates="post")
+    dislikes = relationship("Dislike", back_populates="post")
+
+
+class Like(Base):
+    __tablename__ = "likes"
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id"))
+    post = relationship("Post", back_populates="likes")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
+    
+class Dislike(Base):
+    __tablename__ = "dislikes"
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id"))
+    post = relationship("Post", back_populates="dislikes")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
